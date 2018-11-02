@@ -40,6 +40,7 @@ int main()
 {
 	const auto kPrintTimerCallback = [](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool().lock()->name().c_str(), t->name().c_str()); };
 
+	// Strong, long lived pool, two weak timers (both should run)
 	auto pool1 = TimerPool::CreatePool("Pool 1");
 
 	auto handle1 = pool1->createTimer("TICK!");
@@ -60,26 +61,30 @@ int main()
 		t->start();
 	}
 
-	auto pool2 = TimerPool::CreatePool("Pool 2");
-
-	auto handle3 = pool2->createTimer("Alpha");
-	if (auto t = handle3.lock())
+	// Strong, very long lived pool, two weak timers (both should run)
 	{
-		t->setCallback(kPrintTimerCallback);
-		t->setInterval(std::chrono::milliseconds(666));
-		t->setRepeated(true);
-		t->start();
+		static auto pool2 = TimerPool::CreatePool("Pool 2");
+
+		auto handle3 = pool2->createTimer("Alpha");
+		if (auto t = handle3.lock())
+		{
+			t->setCallback(kPrintTimerCallback);
+			t->setInterval(std::chrono::milliseconds(666));
+			t->setRepeated(true);
+			t->start();
+		}
+
+		auto handle4 = pool2->createTimer("Beta");
+		if (auto t = handle4.lock())
+		{
+			t->setCallback(kPrintTimerCallback);
+			t->setInterval(std::chrono::milliseconds(333));
+			t->setRepeated(true);
+			t->start();
+		}
 	}
 
-	auto handle4 = pool2->createTimer("Beta");
-	if (auto t = handle4.lock())
-	{
-		t->setCallback(kPrintTimerCallback);
-		t->setInterval(std::chrono::milliseconds(333));
-		t->setRepeated(true);
-		t->start();
-	}
-
+	// Weak, short-lived pool, weak timer that outlives its pool (should never run)
 	{
 		TimerPool::WeakTimerHandle handle5;
 		{
@@ -89,6 +94,45 @@ int main()
 		}
 
 		if (auto t = handle5.lock())
+		{
+			t->setCallback(kPrintTimerCallback);
+			t->setInterval(std::chrono::milliseconds(100));
+			t->setRepeated(true);
+			t->start();
+		}
+	}
+
+	// Weak, short-lived pool, strong timer that outlives its pool (should never run)
+	{
+		TimerPool::TimerHandle t;
+		{
+			auto pool4 = TimerPool::CreatePool("Pool 4");
+
+			t = pool4->createTimer("Strong Timer").lock(); // Strong ref
+		}
+
+		if (t)
+		{
+			t->setCallback(kPrintTimerCallback);
+			t->setInterval(std::chrono::milliseconds(100));
+			t->setRepeated(true);
+			t->start();
+		}
+	}
+
+	// Weak, long-lived pool, strong timer that outlives its pool (should never run)
+	{
+		static TimerPool::TimerHandle t;
+		static TimerPool::WeakPoolHandle p;
+
+		{
+			auto pool5 = TimerPool::CreatePool("Pool 5");
+
+			t = pool5->createTimer("Strong Timer").lock(); // Strong ref
+			p = t->pool(); // Weak ref
+		}
+
+		if (t)
 		{
 			t->setCallback(kPrintTimerCallback);
 			t->setInterval(std::chrono::milliseconds(100));

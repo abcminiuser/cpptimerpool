@@ -50,8 +50,11 @@ public:
     class Timer;
 
     using Clock           = std::chrono::steady_clock;
-    using PoolHandle      = std::shared_ptr<TimerPool>;
+
+	using WeakPoolHandle  = std::weak_ptr<TimerPool>;
+	using PoolHandle      = std::shared_ptr<TimerPool>;
     using WeakTimerHandle = std::weak_ptr<Timer>;
+	using TimerHandle     = std::shared_ptr<Timer>;
 
     static PoolHandle               CreatePool(const std::string& name = "");
 
@@ -67,8 +70,6 @@ public:
     void                            deleteTimer(WeakTimerHandle handle);
 
 protected:
-    using TimerHandle = std::shared_ptr<Timer>;
-
     explicit                        TimerPool(const std::string& name);
 
     void                            run();
@@ -89,10 +90,13 @@ class TimerPool::Timer
 	: public std::enable_shared_from_this<Timer>
 {
 public:
-    using Clock      = TimerPool::Clock;
-	using TimerHandle = std::shared_ptr<Timer>;
-    using WeakPoolHandle = std::weak_ptr<TimerPool>;
-	using Callback = std::function<void(TimerHandle)>;
+    using Clock           = TimerPool::Clock;
+    using Callback        = std::function<void(TimerHandle)>;
+
+	using WeakPoolHandle  = std::weak_ptr<TimerPool>;
+	using PoolHandle      = std::shared_ptr<TimerPool>;
+	using WeakTimerHandle = std::weak_ptr<Timer>;
+	using TimerHandle     = std::shared_ptr<Timer>;
 
     explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
     virtual                         ~Timer() = default;
