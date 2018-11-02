@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DCTimerPool", "DCTimerPool\DCTimerPool.vcxproj", "{30E33E8F-8DD6-4543-BA85-C138BCA3F1A9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimerPool", "TimerPool.vcxproj", "{30E33E8F-8DD6-4543-BA85-C138BCA3F1A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +26,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {1A3A8C6B-FF44-4CD6-B92B-CC865F089E2A}
+		SolutionGuid = {C7BE3225-7E62-4EEC-9B93-A696049BF59B}
 	EndGlobalSection
 EndGlobal
