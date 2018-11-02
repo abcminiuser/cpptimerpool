@@ -12,88 +12,58 @@
 class TimerPool
 {
 public:
+	class Timer;
+
+	using Clock = std::chrono::steady_clock;
+	using TimerHandle = std::weak_ptr<Timer>;
+
 	explicit									TimerPool();
 	virtual										~TimerPool();
 
+	void										stop();
 	bool										running() const { return m_run; }
 
-	class Timer;
-	using TimerHandle = std::shared_ptr<Timer>;
-
-	using Clock = std::chrono::steady_clock;
+	void										wake();
 
 	TimerHandle									createTimer();
+	void										deleteTimer(TimerHandle handle);
 
 private:
+	using StrongTimerHandle = std::shared_ptr<Timer>;
+
 	void										run();
-	void										stop();
 	
 private:
 	std::mutex									m_mutex;
-	std::atomic<bool>							m_run;
 	std::condition_variable						m_cond;
 	std::thread									m_thread;
-	std::forward_list<TimerHandle>				m_timers;
+	std::forward_list<StrongTimerHandle>		m_timers;
+	bool										m_run;
 };
 
 class TimerPool::Timer
 {
 public:
-	explicit									Timer(TimerPool& parentPool)
-		: m_parent(parentPool)
-		, m_running(false)
-	{}
-
+	explicit									Timer(TimerPool& parentPool);
 	virtual										~Timer() = default;
 
-	void										setCallback(std::function<void(void)>&& callback)
-	{
-		m_callback = callback;
-	}
+	void										setCallback(std::function<void(void)>&& callback);
+	void										setInterval(std::chrono::milliseconds ms);
+	void										setRepeated(bool repeated);
+	void										start();
+	void										stop();
 
-	void										setInterval(std::chrono::milliseconds ms)
-	{
-		m_interval = ms;
-	}
-
-	void										setRepeated(bool repeated)
-	{
-		m_repeated = repeated;
-	}
-
-	void										start()
-	{
-		m_running = true;
-		m_nextExpiry = TimerPool::Clock::now() + m_interval;
-	}
-
-	void										stop()
-	{
-		m_running = false;
-	}
-
-	void										fire()
-	{
-		if (m_callback)
-			m_callback();
-
-		m_nextExpiry = TimerPool::Clock::now() + m_interval;
-	}
-
-	TimerPool::Clock::time_point nextExpiry() const
-	{
-		if (! m_running)
-			return TimerPool::Clock::time_point::max();
-
-		return m_nextExpiry;
-	}
+	TimerPool&									parent() const { return m_parent; }
+	TimerPool::Clock::time_point				nextExpiry() const;
+	TimerPool::Clock::time_point				fire();
 
 private:
-	TimerPool&						m_parent;
-	std::function<void(void)>		m_callback;
-	std::chrono::milliseconds		m_interval;
-	bool							m_repeated;
+	TimerPool&									m_parent;
+	mutable std::mutex							m_mutex;
+	TimerPool::Clock::time_point				m_nextExpiry;
 
-	bool							m_running;
-	TimerPool::Clock::time_point	m_nextExpiry;
+	bool										m_running;
+	std::function<void(void)>					m_callback;
+	std::chrono::milliseconds					m_interval;
+	bool										m_repeated;
 };
