@@ -1,11 +1,11 @@
 #pragma once
 
-#include <thread>
-#include <mutex>
 #include <condition_variable>
+#include <forward_list>
 #include <functional>
 #include <memory>
-#include <forward_list>
+#include <string>
+#include <thread>
 
 
 class TimerPool
@@ -18,11 +18,12 @@ public:
 	using PoolHandle = std::shared_ptr<TimerPool>;
 	using WeakTimerHandle = std::weak_ptr<Timer>;
 
-	static PoolHandle				CreatePool();
+	static PoolHandle				CreatePool(const std::string& name = "");
 
 	virtual							~TimerPool();
 
 	void							stop();
+	std::string						name() const	{ return m_name; }
 	bool							running() const { return m_running; }
 
 	void							wake();
@@ -33,14 +34,17 @@ public:
 protected:
 	using TimerHandle = std::shared_ptr<Timer>;
 
-	explicit						TimerPool();
+	explicit						TimerPool(const std::string& name);
 
 	void							run();
 
 private:
 	mutable std::mutex				m_mutex;
 	std::condition_variable			m_cond;
+
+	const std::string				m_name;
 	std::forward_list<TimerHandle>	m_timers;
+
 	bool							m_running;
 	std::thread						m_thread;
 };
