@@ -63,7 +63,7 @@ public:
     void                            stop();
     void                            wake();
 
-    WeakTimerHandle                 createTimer();
+    WeakTimerHandle                 createTimer(const std::string& name = "");
     void                            deleteTimer(WeakTimerHandle handle);
 
 protected:
@@ -75,39 +75,49 @@ protected:
 
 private:
     mutable std::mutex              m_mutex;
-    std::condition_variable         m_cond;
 
     const std::string               m_name;
-    std::forward_list<TimerHandle>  m_timers;
 
+    std::forward_list<TimerHandle>  m_timers;
     bool                            m_running;
+
+    std::condition_variable         m_cond;
     std::thread                     m_thread;
 };
 
 class TimerPool::Timer
+	: public std::enable_shared_from_this<Timer>
 {
 public:
     using Clock      = TimerPool::Clock;
-    using Callback   = std::function<void(void)>;
+	using TimerHandle = std::shared_ptr<Timer>;
     using PoolHandle = TimerPool::PoolHandle;
+	using Callback = std::function<void(TimerHandle)>;
 
-    explicit                        Timer(PoolHandle parentPool);
+    explicit                        Timer(PoolHandle pool, const std::string& name = "");
     virtual                         ~Timer() = default;
 
     void                            setCallback(Callback&& callback);
     void                            setInterval(std::chrono::milliseconds ms);
     void                            setRepeated(bool repeated);
 
+    PoolHandle                      pool() const    { return m_pool; }
+
+    std::string                     name() const    { return m_name; }
+    bool                            running() const { return m_running; }
+
     void                            start();
     void                            stop();
-    bool                            running() const { return m_running; }
 
     Clock::time_point               nextExpiry() const;
     Clock::time_point               fire();
 
 private:
     mutable std::mutex              m_mutex;
-    PoolHandle                      m_parent;
+
+    const PoolHandle                m_pool;
+    const std::string               m_name;
+
     Clock::time_point               m_nextExpiry;
 
     bool                            m_running;
