@@ -91,17 +91,17 @@ class TimerPool::Timer
 public:
     using Clock      = TimerPool::Clock;
 	using TimerHandle = std::shared_ptr<Timer>;
-    using PoolHandle = TimerPool::PoolHandle;
+    using WeakPoolHandle = std::weak_ptr<TimerPool>;
 	using Callback = std::function<void(TimerHandle)>;
 
-    explicit                        Timer(PoolHandle pool, const std::string& name = "");
+    explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
     virtual                         ~Timer() = default;
 
     void                            setCallback(Callback&& callback);
     void                            setInterval(std::chrono::milliseconds ms);
     void                            setRepeated(bool repeated);
 
-    PoolHandle                      pool() const    { return m_pool; }
+	WeakPoolHandle                  pool() const    { return m_pool; }
 
     std::string                     name() const    { return m_name; }
     bool                            running() const { return m_running; }
@@ -115,7 +115,7 @@ public:
 private:
     mutable std::mutex              m_mutex;
 
-    const PoolHandle                m_pool;
+    const WeakPoolHandle			m_pool;
     const std::string               m_name;
 
     Clock::time_point               m_nextExpiry;

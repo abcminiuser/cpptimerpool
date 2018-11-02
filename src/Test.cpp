@@ -38,7 +38,7 @@
 
 int main()
 {
-	const auto kPrintTimerCallback = [](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool()->name().c_str(), t->name().c_str()); };
+	const auto kPrintTimerCallback = [](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool().lock()->name().c_str(), t->name().c_str()); };
 
 	auto pool1 = TimerPool::CreatePool("Pool 1");
 
@@ -78,6 +78,23 @@ int main()
 		t->setInterval(std::chrono::milliseconds(333));
 		t->setRepeated(true);
 		t->start();
+	}
+
+	{
+		TimerPool::WeakTimerHandle handle5;
+		{
+			auto pool3 = TimerPool::CreatePool("Pool 3");
+
+			handle5 = pool3->createTimer("Weak Timer");
+		}
+
+		if (auto t = handle5.lock())
+		{
+			t->setCallback(kPrintTimerCallback);
+			t->setInterval(std::chrono::milliseconds(100));
+			t->setRepeated(true);
+			t->start();
+		}
 	}
 
 	std::this_thread::sleep_for(std::chrono::seconds(30));
