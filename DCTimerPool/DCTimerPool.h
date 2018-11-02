@@ -22,10 +22,10 @@ public:
 
 	virtual							~TimerPool();
 
-	void							stop();
 	std::string						name() const	{ return m_name; }
 	bool							running() const { return m_running; }
 
+	void							stop();
 	void							wake();
 
 	WeakTimerHandle					createTimer();
@@ -65,6 +65,7 @@ public:
 
 	void										start();
 	void										stop();
+	bool										running() const { return m_running; }
 
 	Clock::time_point							nextExpiry() const;
 	Clock::time_point							fire();
