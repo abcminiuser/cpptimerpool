@@ -38,21 +38,25 @@
 
 int main()
 {
+	const auto kPrintTimerCallback = [](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool()->name().c_str(), t->name().c_str()); };
+
 	auto pool1 = TimerPool::CreatePool("Pool 1");
 
 	auto handle1 = pool1->createTimer("TICK!");
 	if (auto t = handle1.lock())
 	{
-		t->setCallback([](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool()->name().c_str(), t->name().c_str()); });
+		t->setCallback(kPrintTimerCallback);
 		t->setInterval(std::chrono::milliseconds(1000));
+		t->setRepeated(true);
 		t->start();
 	}
 
 	auto handle2 = pool1->createTimer("TOCK!");
 	if (auto t = handle2.lock())
 	{
-		t->setCallback([](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool()->name().c_str(), t->name().c_str()); });
-		t->setInterval(std::chrono::milliseconds(100));
+		t->setCallback(kPrintTimerCallback);
+		t->setInterval(std::chrono::milliseconds(250));
+		t->setRepeated(true);
 		t->start();
 	}
 
@@ -61,16 +65,18 @@ int main()
 	auto handle3 = pool2->createTimer("Alpha");
 	if (auto t = handle3.lock())
 	{
-		t->setCallback([](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool()->name().c_str(), t->name().c_str()); });
-		t->setInterval(std::chrono::milliseconds(2000));
+		t->setCallback(kPrintTimerCallback);
+		t->setInterval(std::chrono::milliseconds(666));
+		t->setRepeated(true);
 		t->start();
 	}
 
 	auto handle4 = pool2->createTimer("Beta");
 	if (auto t = handle4.lock())
 	{
-		t->setCallback([](TimerPool::Timer::TimerHandle t) { printf("%s - %s\n", t->pool()->name().c_str(), t->name().c_str()); });
+		t->setCallback(kPrintTimerCallback);
 		t->setInterval(std::chrono::milliseconds(333));
+		t->setRepeated(true);
 		t->start();
 	}
 

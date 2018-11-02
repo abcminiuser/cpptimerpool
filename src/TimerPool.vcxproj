@@ -92,6 +92,9 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
+      <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,6 +127,9 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
