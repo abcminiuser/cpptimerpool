@@ -51,10 +51,10 @@ public:
 
     using Clock           = std::chrono::steady_clock;
 
-	using WeakPoolHandle  = std::weak_ptr<TimerPool>;
-	using PoolHandle      = std::shared_ptr<TimerPool>;
+    using WeakPoolHandle  = std::weak_ptr<TimerPool>;
+    using PoolHandle      = std::shared_ptr<TimerPool>;
     using WeakTimerHandle = std::weak_ptr<Timer>;
-	using TimerHandle     = std::shared_ptr<Timer>;
+    using TimerHandle     = std::shared_ptr<Timer>;
 
     static PoolHandle               CreatePool(const std::string& name = "");
 
@@ -88,27 +88,27 @@ private:
 };
 
 class TimerPool::Timer
-	: public std::enable_shared_from_this<Timer>
+    : public std::enable_shared_from_this<Timer>
 {
 public:
     using Clock           = TimerPool::Clock;
     using Callback        = std::function<void(TimerHandle)>;
 
-	using WeakPoolHandle  = std::weak_ptr<TimerPool>;
-	using PoolHandle      = std::shared_ptr<TimerPool>;
-	using WeakTimerHandle = std::weak_ptr<Timer>;
-	using TimerHandle     = std::shared_ptr<Timer>;
+    using WeakPoolHandle  = std::weak_ptr<TimerPool>;
+    using PoolHandle      = std::shared_ptr<TimerPool>;
+    using WeakTimerHandle = std::weak_ptr<Timer>;
+    using TimerHandle     = std::shared_ptr<Timer>;
 
     explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
-	                                Timer(const Timer&) = delete;
-	virtual                         ~Timer() = default;
+                                    Timer(const Timer&) = delete;
+    virtual                         ~Timer() = default;
 
-	WeakPoolHandle                  pool() const { return m_pool; }
+    WeakPoolHandle                  pool() const { return m_pool; }
 
-	std::string                     name() const { return m_name; }
-	bool                            running() const { return m_running; }
+    std::string                     name() const { return m_name; }
+    bool                            running() const { return m_running; }
 
-	void                            setCallback(Callback&& callback);
+    void                            setCallback(Callback&& callback);
     void                            setInterval(std::chrono::milliseconds ms);
     void                            setRepeated(bool repeated);
 
@@ -121,7 +121,7 @@ public:
 private:
     mutable std::mutex              m_mutex;
 
-    const WeakPoolHandle			m_pool;
+    const WeakPoolHandle            m_pool;
     const std::string               m_name;
 
     Clock::time_point               m_nextExpiry;
