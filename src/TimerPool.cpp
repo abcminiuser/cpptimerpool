@@ -92,10 +92,10 @@ void TimerPool::deleteTimer(WeakTimerHandle handle)
 
 void TimerPool::run()
 {
-    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
-
     while (m_running)
     {
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
         auto nowTime  = Clock::now();
         auto wakeTime = Clock::time_point::max();
 
