@@ -124,7 +124,6 @@ int main()
 	{
 		static TimerPool::TimerHandle t;
 		static TimerPool::WeakPoolHandle p;
-
 		{
 			auto pool5 = TimerPool::CreatePool("Pool 5");
 

@@ -71,6 +71,7 @@ public:
 
 protected:
     explicit                        TimerPool(const std::string& name);
+                                    TimerPool(const TimerPool&) = delete;
 
     void                            run();
 
@@ -99,16 +100,17 @@ public:
 	using TimerHandle     = std::shared_ptr<Timer>;
 
     explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
-    virtual                         ~Timer() = default;
+	                                Timer(const Timer&) = delete;
+	virtual                         ~Timer() = default;
 
-    void                            setCallback(Callback&& callback);
+	WeakPoolHandle                  pool() const { return m_pool; }
+
+	std::string                     name() const { return m_name; }
+	bool                            running() const { return m_running; }
+
+	void                            setCallback(Callback&& callback);
     void                            setInterval(std::chrono::milliseconds ms);
     void                            setRepeated(bool repeated);
-
-	WeakPoolHandle                  pool() const    { return m_pool; }
-
-    std::string                     name() const    { return m_name; }
-    bool                            running() const { return m_running; }
 
     void                            start();
     void                            stop();
