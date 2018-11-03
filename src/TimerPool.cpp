@@ -68,12 +68,15 @@ void TimerPool::wake()
 
 TimerPool::WeakTimerHandle TimerPool::createTimer(const std::string& name)
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    auto timer = std::make_shared<Timer>(shared_from_this(), name);
 
-    auto newTimer = std::make_shared<Timer>(shared_from_this(), name);
-    m_timers.emplace_front(newTimer);
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    return newTimer;
+        m_timers.emplace_front(timer);
+    }
+
+    return timer;
 }
 
 void TimerPool::deleteTimer(WeakTimerHandle handle)
@@ -206,6 +209,7 @@ TimerPool::Timer::Clock::time_point TimerPool::Timer::fire()
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
         if (m_repeated)
             m_nextExpiry = Clock::now() + m_interval;
         else
