@@ -107,7 +107,7 @@ void TimerPool::run()
                 wakeTime = expiryTime;
         }
 
-        m_cond.wait_until(lock, wakeTime, [this]() { return !m_running; });
+        m_cond.wait_until(lock, wakeTime);
     }
 }
 
