@@ -21,9 +21,9 @@ reference).
 Compatibility
 ----------------
 
-Tested on Visual Studio 2017. If it works on that, there's a very high chance it
-will work on more standardized, Posix systems. Only C++14 library and compiler
-support is required, no special libraries.
+Tested on Visual Studio 2017 (Windows) and GCC (Linux). Only C++14 standard
+library and compiler support is required, no special libraries, although on
+Posix systems this generally assumes `pthreads` is available.
 
 
 License
