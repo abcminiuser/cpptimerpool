@@ -66,7 +66,7 @@ void TimerPool::wake()
     m_cond.notify_all();
 }
 
-TimerPool::WeakTimerHandle TimerPool::createTimer(const std::string& name)
+TimerPool::TimerHandle TimerPool::createTimer(const std::string& name)
 {
     auto timer = std::make_shared<Timer>(shared_from_this(), name);
 
@@ -79,15 +79,12 @@ TimerPool::WeakTimerHandle TimerPool::createTimer(const std::string& name)
     return timer;
 }
 
-void TimerPool::deleteTimer(WeakTimerHandle handle)
+void TimerPool::deleteTimer(TimerHandle timer)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    if (auto timer = handle.lock())
-    {
-        m_timers.remove(timer);
-        m_cond.notify_all();
-    }
+    m_timers.remove(timer);
+    m_cond.notify_all();
 }
 
 void TimerPool::run()
@@ -99,7 +96,7 @@ void TimerPool::run()
         auto nowTime  = Clock::now();
         auto wakeTime = Clock::time_point::max();
 
-        for (auto& t : m_timers)
+        for (const auto& t : m_timers)
         {
             auto expiryTime = t->nextExpiry();
 

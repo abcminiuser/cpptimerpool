@@ -18,6 +18,21 @@ standard libraries' `std::chrono::steady_clock` as the timer pool's timer
 reference).
 
 
+Object Lifespan
+----------------
+
+Created timers are weakly bound to their parent pools; if the last user-held
+reference to the parent pool expires, the pool is destroyed and all child timers
+will cease to run.
+
+Timers will continue to run if their last user-held reference expires; they are
+strongly owned by their parent pool.
+
+A timer object whose parent pool is no longer valid will not run, however it
+will remain a valid object and can be safely modified without deadlocks or
+crashes.
+
+
 Compatibility
 ----------------
 

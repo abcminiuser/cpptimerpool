@@ -39,6 +39,7 @@
 #include <forward_list>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -66,12 +67,14 @@ public:
     void                            stop();
     void                            wake();
 
-    WeakTimerHandle                 createTimer(const std::string& name = "");
-    void                            deleteTimer(WeakTimerHandle handle);
+    TimerHandle                     createTimer(const std::string& name = "");
+    void                            deleteTimer(TimerHandle timer);
 
 protected:
     explicit                        TimerPool(const std::string& name);
+
                                     TimerPool(const TimerPool&) = delete;
+    TimerPool&                      operator=(const TimerPool&) = delete;
 
     void                            run();
 
@@ -100,8 +103,10 @@ public:
     using TimerHandle     = std::shared_ptr<Timer>;
 
     explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
-                                    Timer(const Timer&) = delete;
     virtual                         ~Timer() = default;
+
+                                    Timer(const Timer&) = delete;
+    Timer&                          operator=(const Timer&) = delete;
 
     WeakPoolHandle                  pool() const { return m_pool; }
 
