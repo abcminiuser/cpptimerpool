@@ -52,7 +52,7 @@ int main()
 
     auto timer1 = pool1->createTimer("TICK!");
     timer1->setCallback(kPrintTimerCallback);
-    timer1->setInterval(std::chrono::milliseconds(1000));
+    timer1->setInterval(std::chrono::seconds(1));
     timer1->setRepeated(true);
     timer1->start();
 
@@ -114,5 +114,5 @@ int main()
         timer6->start();
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(30));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 }
