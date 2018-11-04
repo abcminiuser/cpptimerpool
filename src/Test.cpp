@@ -87,7 +87,7 @@ int main()
         {
             auto pool3 = TimerPool::CreatePool("Pool 3");
 
-            timer5 = pool3->createTimer("Discarded Parent Pool 4 Timer");
+            timer5 = pool3->createTimer("Discarded Parent Pool 3 Timer");
         }
 
         timer5->setCallback(kPrintTimerCallback);
@@ -98,14 +98,14 @@ int main()
 
     // TEST 4: Timer is created and handle retained, but parent pool is only weakly retained and so is discarded (should not run)
     {
-        static TimerPool::WeakPoolHandle pool5weak;
+        static TimerPool::WeakPoolHandle pool4weak;
         static TimerPool::TimerHandle timer6;
         {
-            auto pool5 = TimerPool::CreatePool("Pool 5");
+            auto pool4 = TimerPool::CreatePool("Pool 5");
 
-            timer6 = pool5->createTimer("Discarded Parent Pool 5 Timer");
+            timer6 = pool4->createTimer("Discarded Parent Pool 4 Timer");
 
-            pool5weak = pool5;
+            pool4weak = pool4;
         }
 
         timer6->setCallback(kPrintTimerCallback);
@@ -113,6 +113,16 @@ int main()
         timer6->setRepeated(true);
         timer6->start();
     }
+
+	// TEST 5: Timer and its parent pool are retained, but the pool is manually stopped before it can run (should not run)
+	auto pool5 = TimerPool::CreatePool("Pool 1");
+	pool5->stop();
+
+	auto timer7 = pool5->createTimer("Stopped Parent Pool 5 Timer");
+	timer7->setCallback(kPrintTimerCallback);
+	timer7->setInterval(std::chrono::seconds(1));
+	timer7->setRepeated(true);
+	timer7->start();
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
 }
