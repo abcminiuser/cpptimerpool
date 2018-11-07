@@ -89,6 +89,8 @@ void TimerPool::deleteTimer(TimerHandle timer)
 
 void TimerPool::run()
 {
+    std::vector<TimerHandle> expiredTimers;
+
     while (m_running)
     {
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
@@ -96,18 +98,29 @@ void TimerPool::run()
         auto nowTime  = Clock::now();
         auto wakeTime = Clock::time_point::max();
 
-        for (const auto& t : m_timers)
+        expiredTimers.clear();
+
+        for (const auto& timer : m_timers)
         {
-            auto expiryTime = t->nextExpiry();
+            auto expiryTime = timer->nextExpiry();
 
-            if (nowTime >= expiryTime)
-                expiryTime = t->fire();
-
-            if (expiryTime < wakeTime)
+            if (expiryTime <= nowTime)
+                expiredTimers.push_back(timer);
+            else if (expiryTime < wakeTime)
                 wakeTime = expiryTime;
         }
 
-        m_cond.wait_until(lock, wakeTime);
+        if (! expiredTimers.empty())
+        {
+            lock.unlock();
+            for (const auto& timer : expiredTimers)
+                timer->fire();
+            lock.lock();
+        }
+        else
+        {
+            m_cond.wait_until(lock, wakeTime);
+        }
     }
 }
 
@@ -199,27 +212,23 @@ void TimerPool::Timer::stop()
         pool->wake();
 }
 
-TimerPool::Timer::Clock::time_point TimerPool::Timer::fire()
+void TimerPool::Timer::fire()
 {
-    decltype(m_callback)   callback;
-    decltype(m_nextExpiry) nextExpiry;
+    Callback callback;
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
         if (m_repeated)
-            m_nextExpiry = Clock::now() + m_interval;
+            m_nextExpiry += m_interval;
         else
-            m_nextExpiry = Clock::time_point::max();
+            m_nextExpiry  = Clock::time_point::max();
 
         callback = m_callback;
-        nextExpiry = m_nextExpiry;
     }
 
     if (callback)
         callback(shared_from_this());
-
-    return nextExpiry;
 }
 
 TimerPool::Timer::Clock::time_point TimerPool::Timer::nextExpiry() const

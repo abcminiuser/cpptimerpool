@@ -42,6 +42,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 
 class TimerPool
@@ -54,7 +55,6 @@ public:
 
     using WeakPoolHandle  = std::weak_ptr<TimerPool>;
     using PoolHandle      = std::shared_ptr<TimerPool>;
-    using WeakTimerHandle = std::weak_ptr<Timer>;
     using TimerHandle     = std::shared_ptr<Timer>;
 
     static PoolHandle               CreatePool(const std::string& name = "");
@@ -95,12 +95,10 @@ class TimerPool::Timer
 {
 public:
     using Clock           = TimerPool::Clock;
+    using WeakPoolHandle  = TimerPool::WeakPoolHandle;
+    using PoolHandle      = TimerPool::PoolHandle;
+    using TimerHandle     = TimerPool::TimerHandle;
     using Callback        = std::function<void(TimerHandle)>;
-
-    using WeakPoolHandle  = std::weak_ptr<TimerPool>;
-    using PoolHandle      = std::shared_ptr<TimerPool>;
-    using WeakTimerHandle = std::weak_ptr<Timer>;
-    using TimerHandle     = std::shared_ptr<Timer>;
 
     explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
     virtual                         ~Timer() = default;
@@ -121,7 +119,7 @@ public:
     void                            stop();
 
     Clock::time_point               nextExpiry() const;
-    Clock::time_point               fire();
+    void                            fire();
 
 private:
     mutable std::mutex              m_mutex;
