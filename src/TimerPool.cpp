@@ -72,7 +72,7 @@ TimerPool::TimerHandle TimerPool::createTimer(const std::string& name)
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
+        m_timers.remove(timer);
         m_timers.emplace_front(timer);
     }
 
