@@ -214,7 +214,8 @@ void TimerPool::Timer::stop()
 
 void TimerPool::Timer::fire()
 {
-    Callback callback;
+    Callback    callback;
+    TimerHandle selfHandle;
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -224,11 +225,12 @@ void TimerPool::Timer::fire()
         else
             m_nextExpiry  = Clock::time_point::max();
 
-        callback = m_callback;
+        selfHandle = shared_from_this();
+        callback   = m_callback;
     }
 
     if (callback)
-        callback(shared_from_this());
+        callback(selfHandle);
 }
 
 TimerPool::Timer::Clock::time_point TimerPool::Timer::nextExpiry() const
