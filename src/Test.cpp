@@ -99,7 +99,7 @@ int main()
         static TimerPool::WeakPoolHandle pool4weak;
         static TimerPool::TimerHandle    timer6;
         {
-            auto pool4 = TimerPool::CreatePool("Pool 5");
+            auto pool4 = TimerPool::CreatePool("Pool 4");
 
             timer6 = pool4->createTimer("Discarded Parent Pool 4 Timer");
 
@@ -113,7 +113,7 @@ int main()
     }
 
 	// TEST 5: Timer and its parent pool are retained, but the pool is manually stopped before it can run (should not run)
-	auto pool5 = TimerPool::CreatePool("Pool 1");
+	auto pool5 = TimerPool::CreatePool("Pool 5");
 	pool5->stop();
 
 	auto timer7 = pool5->createTimer("Stopped Parent Pool 5 Timer");
