@@ -66,20 +66,15 @@ void TimerPool::wake()
     m_cond.notify_all();
 }
 
-TimerPool::TimerHandle TimerPool::createTimer(const std::string& name)
+void TimerPool::registerTimer(TimerHandle timer)
 {
-    auto timer = std::make_shared<Timer>(shared_from_this(), name);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        m_timers.remove(timer);
-        m_timers.emplace_front(timer);
-    }
-
-    return timer;
+    m_timers.remove(timer);
+    m_timers.emplace_front(timer);
 }
 
-void TimerPool::deleteTimer(TimerHandle timer)
+void TimerPool::unregisterTimer(TimerHandle timer)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
@@ -136,7 +131,42 @@ void TimerPool::stop()
 
 // ==================
 
-TimerPool::Timer::Timer(WeakPoolHandle pool, const std::string& name)
+TimerPool::Timer::TimerHandle TimerPool::Timer::CreateTimer(PoolHandle pool, const std::string& name)
+{
+    // This wrapper classes is the reference-counted object that is shared by
+    // all created user-timers. It's ref-counted independently to the actual
+    // timer instance, so that the timer is automatically registered and
+    // unregistered when the first and last user-application timer handle is
+    // made. Note that due to the std::share_ptr() aliasing constructor, it will
+    // transparently dereference as a normal TimerPool::Timer instance.
+    class UserTimerReference
+    {
+    public:
+        explicit UserTimerReference(TimerHandle timer)
+            : m_timer(timer)
+        {
+            if (auto pool = m_timer->pool().lock())
+                pool->registerTimer(timer);
+        }
+
+        virtual ~UserTimerReference()
+        {
+            m_timer->stop();
+
+            if (auto pool = m_timer->pool().lock())
+                pool->unregisterTimer(m_timer);
+        }
+    private:
+        TimerHandle m_timer;
+    };
+
+    auto timer      = std::shared_ptr<Timer>(new Timer(pool, name));
+    auto userHandle = std::make_shared<UserTimerReference>(timer);
+
+    return std::shared_ptr<Timer>(userHandle, timer.get());
+}
+
+TimerPool::Timer::Timer(PoolHandle pool, const std::string& name)
     : m_pool{ pool }
     , m_name{ name }
     , m_nextExpiry{ Clock::time_point::max() }

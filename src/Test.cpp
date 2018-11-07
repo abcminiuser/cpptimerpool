@@ -62,26 +62,24 @@ int main()
     timer2->setRepeated(true);
     timer2->start();
 
-    // TEST 2: Timer pool is very long lived, two timers whose references are discarded (both should still run)
+    // TEST 2: Timer pool is very long lived, two timers which are also long lived (both should run)
     {
         static auto pool2 = TimerPool::CreatePool("Pool 2");
 
-        auto timer3 = pool2->createTimer("Alpha");
+        static auto timer3 = pool2->createTimer("Alpha");
         timer3->setCallback(kPrintTimerCallback);
         timer3->setInterval(std::chrono::milliseconds(666));
         timer3->setRepeated(true);
         timer3->start();
 
-        if (auto timer4 = pool2->createTimer("Beta"))
-        {
-            timer4->setCallback(kPrintTimerCallback);
-            timer4->setInterval(std::chrono::milliseconds(333));
-            timer4->setRepeated(true);
-            timer4->start();
-        }
+		static auto timer4 = pool2->createTimer("Beta");
+        timer4->setCallback(kPrintTimerCallback);
+        timer4->setInterval(std::chrono::milliseconds(333));
+        timer4->setRepeated(true);
+        timer4->start();
     }
 
-    // TEST 3: Timer is created after its parent pool is discarded (should not run)
+    // TEST 3: Timer is created before its parent pool is discarded (should not run)
     {
         TimerPool::TimerHandle timer5;
         {
@@ -99,7 +97,7 @@ int main()
     // TEST 4: Timer is created and handle retained, but parent pool is only weakly retained and so is discarded (should not run)
     {
         static TimerPool::WeakPoolHandle pool4weak;
-        static TimerPool::TimerHandle timer6;
+        static TimerPool::TimerHandle    timer6;
         {
             auto pool4 = TimerPool::CreatePool("Pool 5");
 
@@ -124,5 +122,48 @@ int main()
 	timer7->setRepeated(true);
 	timer7->start();
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+	// TEST 6: Parent pool is very long lived, timer's only user reference is discarded (should not run)
+	auto pool6 = TimerPool::CreatePool("Pool 6");
+
+	if (auto timer8 = pool6->createTimer("Discarded Pool 6 Timer"))
+	{
+		timer8->setCallback(kPrintTimerCallback);
+		timer8->setInterval(std::chrono::seconds(1));
+		timer8->setRepeated(true);
+		timer8->start();
+	}
+
+	// TEST 7: Pool is very long lived, but timer is only weakly retained (should not run)
+	{
+		static TimerPool::PoolHandle pool7 = TimerPool::CreatePool("Pool 7");
+		TimerPool::WeakTimerHandle   timer8weak;
+
+		if (auto timer8 = pool7->createTimer("Weak Pool 7 Timer"))
+		{
+			timer8->setCallback(kPrintTimerCallback);
+			timer8->setInterval(std::chrono::seconds(1));
+			timer8->setRepeated(true);
+			timer8->start();
+
+			timer8weak = timer8;
+		}
+	}
+
+	// TEST 8: Pool is very long lived, timer is retained strongly by copy (should run)
+	{
+		static TimerPool::PoolHandle  pool8 = TimerPool::CreatePool("Pool 8");
+		static TimerPool::TimerHandle timer9strong;
+
+		if (auto timer9 = pool8->createTimer("GAMMA"))
+		{
+			timer9->setCallback(kPrintTimerCallback);
+			timer9->setInterval(std::chrono::milliseconds(400));
+			timer9->setRepeated(true);
+			timer9->start();
+
+			timer9strong = timer9;
+		}
+	}
+
+	std::this_thread::sleep_for(std::chrono::seconds(10));
 }

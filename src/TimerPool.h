@@ -52,12 +52,19 @@ public:
     class Timer;
 
     using Clock           = std::chrono::steady_clock;
-
     using WeakPoolHandle  = std::weak_ptr<TimerPool>;
     using PoolHandle      = std::shared_ptr<TimerPool>;
+    using WeakTimerHandle = std::weak_ptr<Timer>;
     using TimerHandle     = std::shared_ptr<Timer>;
 
+public:
     static PoolHandle               CreatePool(const std::string& name = "");
+
+	template<typename... Args>
+	TimerHandle						createTimer(Args&&... args)
+	{
+		return Timer::CreateTimer(shared_from_this(), std::forward<Args>(args)...);
+	}
 
     virtual                         ~TimerPool();
 
@@ -67,8 +74,8 @@ public:
     void                            stop();
     void                            wake();
 
-    TimerHandle                     createTimer(const std::string& name = "");
-    void                            deleteTimer(TimerHandle timer);
+    void                            registerTimer(TimerHandle timer);
+    void                            unregisterTimer(TimerHandle timer);
 
 protected:
     explicit                        TimerPool(const std::string& name);
@@ -97,14 +104,14 @@ public:
     using Clock           = TimerPool::Clock;
     using WeakPoolHandle  = TimerPool::WeakPoolHandle;
     using PoolHandle      = TimerPool::PoolHandle;
+    using WeakTimerHandle = std::weak_ptr<Timer>;
     using TimerHandle     = TimerPool::TimerHandle;
     using Callback        = std::function<void(TimerHandle)>;
 
-    explicit                        Timer(WeakPoolHandle pool, const std::string& name = "");
-    virtual                         ~Timer() = default;
+public:
+    static TimerHandle              CreateTimer(PoolHandle pool, const std::string& name = "");
 
-                                    Timer(const Timer&) = delete;
-    Timer&                          operator=(const Timer&) = delete;
+    virtual                         ~Timer() = default;
 
     WeakPoolHandle                  pool() const { return m_pool; }
 
@@ -120,6 +127,12 @@ public:
 
     Clock::time_point               nextExpiry() const;
     void                            fire();
+
+protected:
+    explicit                        Timer(PoolHandle pool, const std::string& name = "");
+
+    Timer(const Timer&) = delete;
+    Timer&                          operator=(const Timer&) = delete;
 
 private:
     mutable std::mutex              m_mutex;
