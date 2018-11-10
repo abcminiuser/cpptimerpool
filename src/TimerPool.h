@@ -126,7 +126,7 @@ public:
 protected:
     explicit                        Timer(PoolHandle pool, const std::string& name = "");
 
-    Timer(const Timer&) = delete;
+                                    Timer(const Timer&) = delete;
     Timer&                          operator=(const Timer&) = delete;
 
 private:

@@ -219,6 +219,9 @@ void TimerPool::Timer::setInterval(std::chrono::milliseconds ms)
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
+        if (m_interval == ms)
+            return;
+
         m_interval = ms;
         m_nextExpiry = Clock::now() + m_interval;
     }
@@ -231,6 +234,9 @@ void TimerPool::Timer::setRepeated(bool repeated)
 {
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+        if (m_repeated == repeated)
+            return;
 
         m_repeated = repeated;
         m_nextExpiry = Clock::now() + m_interval;
@@ -259,6 +265,7 @@ void TimerPool::Timer::stop()
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
         m_running = false;
+        m_nextExpiry = Clock::time_point::max();
     }
 
     if (auto pool = m_pool.lock())
