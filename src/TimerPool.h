@@ -59,13 +59,7 @@ public:
     using TimerHandle     = std::shared_ptr<Timer>;
 
 public:
-    static PoolHandle               CreatePool(const std::string& name = "");
-
-	template<typename... Args>
-	TimerHandle						createTimer(Args&&... args)
-	{
-		return Timer::CreateTimer(shared_from_this(), std::forward<Args>(args)...);
-	}
+    static PoolHandle               Create(const std::string& name = "");
 
     virtual                         ~TimerPool();
 
@@ -110,7 +104,7 @@ public:
     using Callback        = std::function<void(TimerHandle)>;
 
 public:
-    static TimerHandle              CreateTimer(PoolHandle pool, const std::string& name = "");
+    static TimerHandle              Create(PoolHandle pool, const std::string& name = "");
 
     virtual                         ~Timer() = default;
 

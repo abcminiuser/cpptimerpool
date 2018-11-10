@@ -86,7 +86,7 @@ namespace
 }
 
 
-TimerPool::PoolHandle TimerPool::CreatePool(const std::string& name)
+TimerPool::PoolHandle TimerPool::Create(const std::string& name)
 {
     return std::make_shared<TimerPoolPrivate>(name);
 }
@@ -181,7 +181,7 @@ void TimerPool::stop()
 
 // ==================
 
-TimerPool::Timer::TimerHandle TimerPool::Timer::CreateTimer(PoolHandle pool, const std::string& name)
+TimerPool::Timer::TimerHandle TimerPool::Timer::Create(PoolHandle pool, const std::string& name)
 {
     auto timer      = std::make_shared<TimerPrivate>(pool, name);
     auto userHandle = std::make_shared<UserTimer>(timer);
