@@ -109,7 +109,7 @@ void TimerPool::run()
         {
             lock.unlock();
             for (const auto& timer : expiredTimers)
-                timer->fire();
+                timer->fire(nowTime);
             lock.lock();
         }
         else
@@ -242,25 +242,42 @@ void TimerPool::Timer::stop()
         pool->wake();
 }
 
-void TimerPool::Timer::fire()
+void TimerPool::Timer::fire(Clock::time_point now)
 {
-    Callback    callback;
-    TimerHandle selfHandle;
+	size_t		callbacksRequired = 0;
+	Callback    callback;
+	TimerHandle selfHandle;
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        if (m_repeated)
-            m_nextExpiry += m_interval;
-        else
-            m_nextExpiry  = Clock::time_point::max();
+		selfHandle = shared_from_this();
+		callback   = m_callback;
 
-        selfHandle = shared_from_this();
-        callback   = m_callback;
+		if (m_repeated)
+		{
+			// We might have to catch up to the current time - it's more efficient
+			// to fire as many callbacks as we can be sure we've missed right now while
+			// we're making expensive callback object copies, then clean up any extra
+			// missed callbacks later when the parent pool re-evaluates the pool timers.
+			do
+			{
+				m_nextExpiry += m_interval;
+				callbacksRequired++;
+			} while (m_nextExpiry < now);
+		}
+		else
+		{
+			m_nextExpiry = Clock::time_point::max();
+			callbacksRequired++;
+		}
     }
 
-    if (callback)
-        callback(selfHandle);
+	if (callback)
+	{
+		while (callbacksRequired--)
+			callback(selfHandle);
+	}
 }
 
 TimerPool::Timer::Clock::time_point TimerPool::Timer::nextExpiry() const

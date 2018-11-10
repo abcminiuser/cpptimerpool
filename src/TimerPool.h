@@ -126,7 +126,7 @@ public:
     void                            stop();
 
     Clock::time_point               nextExpiry() const;
-    void                            fire();
+    void                            fire(Clock::time_point now = Clock::time_point::min());
 
 protected:
     explicit                        Timer(PoolHandle pool, const std::string& name = "");
