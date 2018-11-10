@@ -158,9 +158,9 @@ void TimerPool::run()
         if (! expiredTimers.empty())
         {
             lock.unlock();
+
             for (const auto& timer : expiredTimers)
                 timer->fire(nowTime);
-            lock.lock();
         }
         else
         {
