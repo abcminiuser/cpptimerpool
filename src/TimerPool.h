@@ -99,7 +99,7 @@ public:
     using Clock           = TimerPool::Clock;
     using WeakPoolHandle  = TimerPool::WeakPoolHandle;
     using PoolHandle      = TimerPool::PoolHandle;
-    using WeakTimerHandle = std::weak_ptr<Timer>;
+    using WeakTimerHandle = TimerPool::WeakTimerHandle;
     using TimerHandle     = TimerPool::TimerHandle;
     using Callback        = std::function<void(TimerHandle)>;
 
