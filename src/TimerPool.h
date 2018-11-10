@@ -35,6 +35,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <forward_list>
 #include <functional>

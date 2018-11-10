@@ -36,9 +36,59 @@
 #include "TimerPool.h"
 
 
+namespace
+{
+	class TimerPoolPrivate : public TimerPool
+	{
+	public:
+		template<typename... Args>
+		TimerPoolPrivate(Args&&... args) : TimerPool(std::forward<Args>(args)...) {}
+
+		virtual ~TimerPoolPrivate() = default;
+	};
+
+	class TimerPrivate : public TimerPool::Timer
+	{
+	public:
+		template<typename... Args>
+		TimerPrivate(Args&&... args) : Timer(std::forward<Args>(args)...) {}
+
+		virtual ~TimerPrivate() = default;
+	};
+
+	// This wrapper classes is the reference-counted object that is shared by
+	// all created user-timers. It's ref-counted independently to the actual
+	// timer instance, so that the timer is automatically registered and
+	// unregistered when the first and last user-application timer handle is
+	// made. Note that due to the std::share_ptr() aliasing constructor, it will
+	// transparently dereference as a normal TimerPool::Timer instance.
+	class UserTimer
+	{
+	public:
+		explicit UserTimer(TimerPool::TimerHandle timer)
+			: m_timer(timer)
+		{
+			if (auto pool = m_timer->pool().lock())
+				pool->registerTimer(timer);
+		}
+
+		virtual ~UserTimer()
+		{
+			m_timer->stop();
+
+			if (auto pool = m_timer->pool().lock())
+				pool->unregisterTimer(m_timer);
+		}
+
+	private:
+		TimerPool::TimerHandle m_timer;
+	};
+}
+
+
 TimerPool::PoolHandle TimerPool::CreatePool(const std::string& name)
 {
-    return std::shared_ptr<TimerPool>(new TimerPool(name));
+    return std::make_shared<TimerPoolPrivate>(name);
 }
 
 TimerPool::TimerPool(const std::string& name)
@@ -133,35 +183,8 @@ void TimerPool::stop()
 
 TimerPool::Timer::TimerHandle TimerPool::Timer::CreateTimer(PoolHandle pool, const std::string& name)
 {
-    // This wrapper classes is the reference-counted object that is shared by
-    // all created user-timers. It's ref-counted independently to the actual
-    // timer instance, so that the timer is automatically registered and
-    // unregistered when the first and last user-application timer handle is
-    // made. Note that due to the std::share_ptr() aliasing constructor, it will
-    // transparently dereference as a normal TimerPool::Timer instance.
-    class UserTimerReference
-    {
-    public:
-        explicit UserTimerReference(TimerHandle timer)
-            : m_timer(timer)
-        {
-            if (auto pool = m_timer->pool().lock())
-                pool->registerTimer(timer);
-        }
-
-        virtual ~UserTimerReference()
-        {
-            m_timer->stop();
-
-            if (auto pool = m_timer->pool().lock())
-                pool->unregisterTimer(m_timer);
-        }
-    private:
-        TimerHandle m_timer;
-    };
-
-    auto timer      = std::shared_ptr<Timer>(new Timer(pool, name));
-    auto userHandle = std::make_shared<UserTimerReference>(timer);
+    auto timer      = std::make_shared<TimerPrivate>(pool, name);
+    auto userHandle = std::make_shared<UserTimer>(timer);
 
     return std::shared_ptr<Timer>(userHandle, timer.get());
 }
