@@ -143,11 +143,9 @@ void TimerPool::run()
         auto nowTime  = Clock::now();
         auto wakeTime = Clock::time_point::max();
 
-        expiredTimers.clear();
-
         for (const auto& timer : m_timers)
         {
-            auto expiryTime = timer->nextExpiry();
+            const auto expiryTime = timer->nextExpiry();
 
             if (expiryTime <= nowTime)
                 expiredTimers.push_back(timer);
@@ -161,6 +159,8 @@ void TimerPool::run()
 
             for (const auto& timer : expiredTimers)
                 timer->fire(nowTime);
+
+			expiredTimers.clear();
         }
         else
         {
