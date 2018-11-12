@@ -274,7 +274,7 @@ void TimerPool::Timer::stop()
 
 void TimerPool::Timer::fire(Clock::time_point now)
 {
-    size_t      callbacksRequired = 0;
+    int         callbacksRequired = 0;
     Callback    callback;
     TimerHandle selfHandle;
 
@@ -299,6 +299,8 @@ void TimerPool::Timer::fire(Clock::time_point now)
         else
         {
             m_nextExpiry = Clock::time_point::max();
+            m_running = false;
+
             callbacksRequired++;
         }
     }
