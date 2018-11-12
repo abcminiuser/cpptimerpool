@@ -85,7 +85,9 @@ private:
 
     const std::string               m_name;
 
+    std::recursive_mutex            m_timerMutex;
     std::forward_list<TimerHandle>  m_timers;
+
     bool                            m_running;
 
     std::condition_variable         m_cond;

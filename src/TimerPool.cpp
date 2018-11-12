@@ -118,7 +118,8 @@ void TimerPool::wake()
 
 void TimerPool::registerTimer(TimerHandle timer)
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
+    std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
     m_timers.remove(timer);
     m_timers.emplace_front(timer);
@@ -126,7 +127,8 @@ void TimerPool::registerTimer(TimerHandle timer)
 
 void TimerPool::unregisterTimer(TimerHandle timer)
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
+    std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
     m_timers.remove(timer);
     m_cond.notify_all();
@@ -138,7 +140,8 @@ void TimerPool::run()
 
     while (m_running)
     {
-        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+        std::unique_lock<decltype(m_timerMutex)> timerLock(m_timerMutex);
+        std::unique_lock<decltype(m_mutex)>      lock(m_mutex);
 
         auto nowTime  = Clock::now();
         auto wakeTime = Clock::time_point::max();
@@ -155,7 +158,13 @@ void TimerPool::run()
 
         if (! expiredTimers.empty())
         {
-            lock.unlock();
+			// We fire callbacks without the pool modification lock held, so that the timer callbacks can
+			// safely manipulate the pool if desired (and so other threads can change the pool while callbacks
+			// are in progress). Note that the timer list modification (recursive) mutex remains held, so that
+			// we do block if timers are being (de-)registered while the callbacks are run, so that we don't
+			// e.g. try to fire a callback to a partially destroyed user-object that owned the timer being unregistered.
+
+			lock.unlock();
 
             for (const auto& timer : expiredTimers)
                 timer->fire(nowTime);
@@ -164,7 +173,12 @@ void TimerPool::run()
         }
         else
         {
-            m_cond.wait_until(lock, wakeTime);
+			// About to enter idle state, release the timer (de-)registration lock so that other threads can (de-)register
+			// any timers while the pool is sleeping, when no callbacks are in progress.
+
+			timerLock.unlock();
+
+			m_cond.wait_until(lock, wakeTime);
         }
     }
 }
