@@ -158,13 +158,13 @@ void TimerPool::run()
 
         if (! expiredTimers.empty())
         {
-			// We fire callbacks without the pool modification lock held, so that the timer callbacks can
-			// safely manipulate the pool if desired (and so other threads can change the pool while callbacks
-			// are in progress). Note that the timer list modification (recursive) mutex remains held, so that
-			// we do block if timers are being (de-)registered while the callbacks are run, so that we don't
-			// e.g. try to fire a callback to a partially destroyed user-object that owned the timer being unregistered.
+            // We fire callbacks without the pool modification lock held, so that the timer callbacks can
+            // safely manipulate the pool if desired (and so other threads can change the pool while callbacks
+            // are in progress). Note that the timer list modification (recursive) mutex remains held, so that
+            // we do block if timers are being (de-)registered while the callbacks are run, so that we don't
+            // e.g. try to fire a callback to a partially destroyed user-object that owned the timer being unregistered.
 
-			lock.unlock();
+            lock.unlock();
 
             for (const auto& timer : expiredTimers)
                 timer->fire(nowTime);
@@ -173,12 +173,12 @@ void TimerPool::run()
         }
         else
         {
-			// About to enter idle state, release the timer (de-)registration lock so that other threads can (de-)register
-			// any timers while the pool is sleeping, when no callbacks are in progress.
+            // About to enter idle state, release the timer (de-)registration lock so that other threads can (de-)register
+            // any timers while the pool is sleeping, when no callbacks are in progress.
 
-			timerLock.unlock();
+            timerLock.unlock();
 
-			m_cond.wait_until(lock, wakeTime);
+            m_cond.wait_until(lock, wakeTime);
         }
     }
 }
@@ -326,7 +326,19 @@ void TimerPool::Timer::fire(Clock::time_point now)
     }
 }
 
-TimerPool::Timer::Clock::time_point TimerPool::Timer::nextExpiry() const
+bool TimerPool::Timer::running() const noexcept
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    // We can't use a std::atomic<bool> here, since we need to be sure that
+    // the run state returned is under the same lock as the rest of the timer
+    // management to ensure it remains consistent with the expiry time and other
+    // internal state.
+
+    return m_running;
+}
+
+TimerPool::Timer::Clock::time_point TimerPool::Timer::nextExpiry() const noexcept
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 

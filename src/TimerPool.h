@@ -35,6 +35,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <forward_list>
@@ -88,7 +89,7 @@ private:
     std::recursive_mutex            m_timerMutex;
     std::forward_list<TimerHandle>  m_timers;
 
-    bool                            m_running;
+    std::atomic<bool>               m_running;
 
     std::condition_variable         m_cond;
     std::thread                     m_thread;
@@ -113,7 +114,6 @@ public:
     WeakPoolHandle                  pool() const { return m_pool; }
 
     std::string                     name() const { return m_name; }
-    bool                            running() const { return m_running; }
 
     void                            setCallback(Callback&& callback);
     void                            setInterval(std::chrono::milliseconds ms);
@@ -122,7 +122,9 @@ public:
     void                            start();
     void                            stop();
 
-    Clock::time_point               nextExpiry() const;
+    bool                            running() const noexcept;
+    Clock::time_point               nextExpiry() const noexcept;
+
     void                            fire(Clock::time_point now = Clock::time_point::min());
 
 protected:
