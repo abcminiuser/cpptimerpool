@@ -119,7 +119,14 @@ public:
     void                            setInterval(std::chrono::milliseconds ms);
     void                            setRepeated(bool repeated);
 
-    void                            start();
+    enum class StartMode
+    {
+        StartOnly,
+        RestartIfRunning,
+        RestartOnly,
+    };
+
+    void                            start(StartMode mode = StartMode::RestartIfRunning);
     void                            stop();
 
     bool                            running() const noexcept;

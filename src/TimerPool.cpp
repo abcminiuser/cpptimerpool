@@ -260,13 +260,41 @@ void TimerPool::Timer::setRepeated(bool repeated)
         pool->wake();
 }
 
-void TimerPool::Timer::start()
+void TimerPool::Timer::start(StartMode mode)
 {
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        m_running = true;
-        m_nextExpiry = Clock::now() + m_interval;
+        switch (mode)
+        {
+            case StartMode::StartOnly:
+            {
+                if (m_running)
+                    return;
+
+                m_running = true;
+                m_nextExpiry = Clock::now() + m_interval;
+
+                break;
+            }
+
+            case StartMode::RestartIfRunning:
+            {
+                m_running = true;
+                m_nextExpiry = Clock::now() + m_interval;
+
+                break;
+            }
+
+            case StartMode::RestartOnly:
+            {
+                if (! m_running)
+                    return;
+
+                m_nextExpiry = Clock::now() + m_interval;
+                break;
+            }
+        }
     }
 
     if (auto pool = m_pool.lock())
