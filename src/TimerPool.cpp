@@ -144,7 +144,7 @@ void TimerPool::run()
         std::unique_lock<decltype(m_mutex)>      lock(m_mutex);
 
         auto nowTime  = Clock::now();
-        auto wakeTime = Clock::time_point::max();
+        auto wakeTime = nowTime + std::chrono::seconds(1);
 
         for (const auto& timer : m_timers)
         {
@@ -269,32 +269,31 @@ void TimerPool::Timer::start(StartMode mode)
         {
             case StartMode::StartOnly:
             {
+                // Abort if timer already running, we aren't allowing restarts
                 if (m_running)
                     return;
-
-                m_running = true;
-                m_nextExpiry = Clock::now() + m_interval;
 
                 break;
             }
 
             case StartMode::RestartIfRunning:
             {
-                m_running = true;
-                m_nextExpiry = Clock::now() + m_interval;
-
+                // No preconditons, always (re)start
                 break;
             }
 
             case StartMode::RestartOnly:
             {
+                // Abort if timer not already running, we are only allowing restarts
                 if (! m_running)
                     return;
 
-                m_nextExpiry = Clock::now() + m_interval;
                 break;
             }
         }
+
+        m_running = true;
+        m_nextExpiry = Clock::now() + m_interval;
     }
 
     if (auto pool = m_pool.lock())
