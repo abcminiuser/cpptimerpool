@@ -38,20 +38,24 @@
 
 namespace
 {
+    // Private wrapper, used to expose the normally protected constructor
+    // internally to the factory methods inside the TimerPool class.
     class TimerPoolPrivate : public TimerPool
     {
     public:
         template<typename... Args>
-        TimerPoolPrivate(Args&&... args) : TimerPool(std::forward<Args>(args)...) {}
+        explicit TimerPoolPrivate(Args&&... args) : TimerPool(std::forward<Args>(args)...) {}
 
         virtual ~TimerPoolPrivate() = default;
     };
 
+    // Private wrapper, used to expose the normally protected constructor
+    // internally to the factory methods inside the TimerPool class.
     class TimerPrivate : public TimerPool::Timer
     {
     public:
         template<typename... Args>
-        TimerPrivate(Args&&... args) : Timer(std::forward<Args>(args)...) {}
+        explicit TimerPrivate(Args&&... args) : Timer(std::forward<Args>(args)...) {}
 
         virtual ~TimerPrivate() = default;
     };
@@ -81,7 +85,7 @@ namespace
         }
 
     private:
-        TimerPool::TimerHandle m_timer;
+        const TimerPool::TimerHandle m_timer;
     };
 }
 
@@ -113,6 +117,7 @@ TimerPool::~TimerPool()
 void TimerPool::wake()
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
     m_cond.notify_all();
 }
 
@@ -123,6 +128,8 @@ void TimerPool::registerTimer(TimerHandle timer)
 
     m_timers.remove(timer);
     m_timers.emplace_front(timer);
+
+    m_cond.notify_all();
 }
 
 void TimerPool::unregisterTimer(TimerHandle timer)
@@ -131,6 +138,7 @@ void TimerPool::unregisterTimer(TimerHandle timer)
     std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
     m_timers.remove(timer);
+
     m_cond.notify_all();
 }
 
@@ -144,14 +152,14 @@ void TimerPool::run()
         std::unique_lock<decltype(m_mutex)>      lock(m_mutex);
 
         auto nowTime  = Clock::now();
-        auto wakeTime = nowTime + std::chrono::seconds(1);
+        auto wakeTime = nowTime + std::chrono::minutes(1);
 
         for (const auto& timer : m_timers)
         {
             const auto expiryTime = timer->nextExpiry();
 
             if (expiryTime <= nowTime)
-                expiredTimers.push_back(timer);
+                expiredTimers.emplace_back(timer);
             else if (expiryTime < wakeTime)
                 wakeTime = expiryTime;
         }
@@ -217,47 +225,23 @@ TimerPool::Timer::Timer(PoolHandle pool, const std::string& name)
 
 void TimerPool::Timer::setCallback(Callback&& callback)
 {
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        m_callback = callback;
-        m_nextExpiry = Clock::now() + m_interval;
-    }
-
-    if (auto pool = m_pool.lock())
-        pool->wake();
+    m_callback = callback;
 }
 
 void TimerPool::Timer::setInterval(std::chrono::milliseconds ms)
 {
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        if (m_interval == ms)
-            return;
-
-        m_interval = ms;
-        m_nextExpiry = Clock::now() + m_interval;
-    }
-
-    if (auto pool = m_pool.lock())
-        pool->wake();
+    m_interval = ms;
 }
 
 void TimerPool::Timer::setRepeated(bool repeated)
 {
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        if (m_repeated == repeated)
-            return;
-
-        m_repeated = repeated;
-        m_nextExpiry = Clock::now() + m_interval;
-    }
-
-    if (auto pool = m_pool.lock())
-        pool->wake();
+    m_repeated = repeated;
 }
 
 void TimerPool::Timer::start(StartMode mode)
