@@ -2,7 +2,7 @@ kind: pipeline
 name: default
 
 steps:
-- name: test
+- name: Test
   image: gcc
   commands:
   - make -C src all

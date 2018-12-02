@@ -4,4 +4,4 @@ all:
 test:
 	./test
 
-.PHONY: all
+.PHONY: all test
