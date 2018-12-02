@@ -1,0 +1,9 @@
+kind: pipeline
+name: default
+
+steps:
+- name: test
+  image: gcc
+  commands:
+  - make -C src all
+  - make -C src test
