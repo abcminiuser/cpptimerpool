@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimerPool", "TimerPool.vcxproj", "{30E33E8F-8DD6-4543-BA85-C138BCA3F1A9}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
@@ -27,5 +30,17 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C7BE3225-7E62-4EEC-9B93-A696049BF59B}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
