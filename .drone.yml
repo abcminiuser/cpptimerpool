@@ -12,6 +12,11 @@ steps:
   commands:
   - make -C src test
 
+- name: Static Analysis
+  image: abcminiuser/docker-ci-ubuntu-buildtools
+  commands:
+  - cppcheck --enable=warning --quiet src
+
 - name: Valgrind
   image: abcminiuser/docker-ci-ubuntu-buildtools
   commands:
