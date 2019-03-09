@@ -61,7 +61,7 @@ namespace
     };
 
     // This wrapper classes is the reference-counted object that is shared by
-    // all created user-timers. It's ref-counted independently to the actual
+    // all created user-timers. It is ref-counted independently to the actual
     // timer instance, so that the timer is automatically registered and
     // unregistered when the first and last user-application timer handle is
     // made. Note that due to the std::share_ptr() aliasing constructor, it will
