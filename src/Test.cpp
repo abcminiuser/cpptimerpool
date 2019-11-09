@@ -35,6 +35,8 @@
 
 #include "TimerPool.h"
 
+#include <iostream>
+
 
 int main()
 {
@@ -44,7 +46,7 @@ int main()
 			const auto poolName  = t->pool().lock()->name();
 			const auto timerName = t->name();
 
-			printf("%s - %s\n", poolName.c_str(), timerName.c_str());
+			std::cout << poolName << " - " << timerName << "\n";
 		};
 
 	// TEST 1: Timer pool is long lived, two long lived timers (both should run)

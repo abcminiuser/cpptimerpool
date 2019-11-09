@@ -35,29 +35,21 @@
 
 #include "TimerPool.h"
 
+#include <vector>
+
 
 namespace
 {
-    // Private wrapper, used to expose the normally protected constructor
+    // Private wrapper, used to expose the normally protected constructors
     // internally to the factory methods inside the TimerPool class.
-    class TimerPoolPrivate : public TimerPool
+    template <class BaseClass>
+    class EnableConstructor : public BaseClass
     {
     public:
         template<typename... Args>
-        explicit TimerPoolPrivate(Args&&... args) : TimerPool(std::forward<Args>(args)...) {}
+        explicit EnableConstructor(Args&&... args) : BaseClass(std::forward<Args>(args)...) {}
 
-        virtual ~TimerPoolPrivate() = default;
-    };
-
-    // Private wrapper, used to expose the normally protected constructor
-    // internally to the factory methods inside the TimerPool class.
-    class TimerPrivate : public TimerPool::Timer
-    {
-    public:
-        template<typename... Args>
-        explicit TimerPrivate(Args&&... args) : Timer(std::forward<Args>(args)...) {}
-
-        virtual ~TimerPrivate() = default;
+        virtual ~EnableConstructor() = default;
     };
 
     // This wrapper classes is the reference-counted object that is shared by
@@ -92,7 +84,7 @@ namespace
 
 TimerPool::PoolHandle TimerPool::Create(const std::string& name)
 {
-    return std::make_shared<TimerPoolPrivate>(name);
+    return std::make_shared<EnableConstructor<TimerPool>>(name);
 }
 
 TimerPool::TimerPool(const std::string& name)
@@ -205,7 +197,7 @@ void TimerPool::stop()
 
 TimerPool::Timer::TimerHandle TimerPool::Timer::Create(PoolHandle pool, const std::string& name)
 {
-    auto timer      = std::make_shared<TimerPrivate>(pool, name);
+    auto timer      = std::make_shared<EnableConstructor<Timer>>(pool, name);
     auto userHandle = std::make_shared<UserTimer>(timer);
 
     return std::shared_ptr<Timer>(userHandle, timer.get());
