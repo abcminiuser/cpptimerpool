@@ -1,6 +1,6 @@
 /*
        Thread Safe Timer Pool Library
-       Copyright (C) Dean Camera, 2018.
+           By Dean Camera, 2019.
 
      dean [at] fourwalledcubicle [dot] com
           www.fourwalledcubicle.com

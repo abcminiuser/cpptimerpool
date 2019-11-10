@@ -1,6 +1,6 @@
 /*
        Thread Safe Timer Pool Library
-       Copyright (C) Dean Camera, 2018.
+           By Dean Camera, 2019.
 
      dean [at] fourwalledcubicle [dot] com
           www.fourwalledcubicle.com
@@ -43,7 +43,8 @@ namespace
     // Private wrapper, used to expose the normally protected constructors
     // internally to the factory methods inside the TimerPool class.
     template <class BaseClass>
-    class EnableConstructor : public BaseClass
+    class EnableConstructor final
+		: public BaseClass
     {
     public:
         template<typename... Args>
@@ -58,7 +59,7 @@ namespace
     // unregistered when the first and last user-application timer handle is
     // made. Note that due to the std::share_ptr() aliasing constructor, it will
     // transparently dereference as a normal TimerPool::Timer instance.
-    class UserTimer
+    class UserTimer final
     {
     public:
         explicit UserTimer(TimerPool::TimerHandle timer)

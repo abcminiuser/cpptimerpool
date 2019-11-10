@@ -1,9 +1,9 @@
 /*
        Thread Safe Timer Pool Library
-       Copyright (C) Dean Camera, 2018.
+           By Dean Camera, 2019.
 
      dean [at] fourwalledcubicle [dot] com
-          www.fourwalledcubicle.cpm
+          www.fourwalledcubicle.com
 */
 
 /*
@@ -41,7 +41,7 @@
 int main()
 {
 	static const auto kPrintTimerCallback =
-		[](TimerPool::TimerHandle t)
+		[](const TimerPool::TimerHandle& t)
 		{
 			const auto poolName  = t->pool().lock()->name();
 			const auto timerName = t->name();
