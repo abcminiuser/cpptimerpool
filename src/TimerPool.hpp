@@ -3,7 +3,7 @@
        Copyright (C) Dean Camera, 2018.
 
      dean [at] fourwalledcubicle [dot] com
-          www.fourwalledcubicle.cpm
+          www.fourwalledcubicle.com
 */
 
 /*

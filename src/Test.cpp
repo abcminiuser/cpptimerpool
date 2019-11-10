@@ -33,7 +33,7 @@
     For more information, please refer to <http://unlicense.org/>
 */
 
-#include "TimerPool.h"
+#include "TimerPool.hpp"
 
 #include <iostream>
 
