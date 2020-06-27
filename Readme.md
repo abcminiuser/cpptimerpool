@@ -35,9 +35,9 @@ crashes.
 Compatibility
 ----------------
 
-Tested on Visual Studio 2017 (Windows) and GCC (Linux). Only C++14 standard
-library and compiler support is required, no special libraries, although on
-Posix systems this generally assumes `pthreads` is available.
+Tested on Visual Studio 2019 (Windows) and Clang/GCC (Linux). Only C++14
+standard library and compiler support is required, no special libraries,
+although on Posix systems this generally assumes `pthreads` is available.
 
 
 License
