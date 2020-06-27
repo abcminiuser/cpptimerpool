@@ -2,9 +2,20 @@ kind: pipeline
 name: default
 
 steps:
-- name: Build
+- name: Build (Clang)
   image: abcminiuser/docker-ci-ubuntu-buildtools
   commands:
+  - export CC=/usr/bin/clang
+  - export CXX=/usr/bin/clang++
+  - $CC --version
+  - make -C src all
+
+- name: Build (GCC)
+  image: abcminiuser/docker-ci-ubuntu-buildtools
+  commands:
+  - export CC=/usr/bin/gcc
+  - export CXX=/usr/bin/g++
+  - $CC --version
   - make -C src all
 
 - name: Test
