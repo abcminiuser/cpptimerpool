@@ -4,7 +4,10 @@ all:
 test: all
 	./test
 
+cppcheck:
+	cppcheck --quiet --enable=all --suppress=unusedFunction --suppress=missingIncludeSystem .
+
 valgrind: all
 	valgrind ./test
 
-.PHONY: all test valgrind
+.PHONY: all test cppcheck valgrind
