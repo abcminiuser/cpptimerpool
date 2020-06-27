@@ -62,10 +62,10 @@ namespace
     class UserTimer final
     {
     public:
-        explicit UserTimer(TimerPool::TimerHandle timer)
+        explicit UserTimer(const TimerPool::TimerHandle& timer)
             : m_timer(timer)
         {
-            if (auto pool = m_timer->pool().lock())
+            if (const auto& pool = m_timer->pool())
                 pool->registerTimer(timer);
         }
 
@@ -73,7 +73,7 @@ namespace
         {
             m_timer->stop();
 
-            if (auto pool = m_timer->pool().lock())
+            if (const auto& pool = m_timer->pool())
                 pool->unregisterTimer(m_timer);
         }
 
@@ -144,7 +144,8 @@ void TimerPool::run()
         std::unique_lock<decltype(m_timerMutex)> timerLock(m_timerMutex);
         std::unique_lock<decltype(m_mutex)>      lock(m_mutex);
 
-        auto nowTime  = Clock::now();
+        const auto nowTime = Clock::now();
+
         auto wakeTime = nowTime + std::chrono::minutes(1);
 
         for (const auto& timer : m_timers)
@@ -196,15 +197,15 @@ void TimerPool::stop()
 
 // ==================
 
-TimerPool::Timer::TimerHandle TimerPool::Timer::Create(PoolHandle pool, const std::string& name)
+TimerPool::Timer::TimerHandle TimerPool::Timer::Create(const PoolHandle& pool, const std::string& name)
 {
-    auto timer      = std::make_shared<EnableConstructor<Timer>>(pool, name);
-    auto userHandle = std::make_shared<UserTimer>(timer);
+    const auto timer      = std::make_shared<EnableConstructor<Timer>>(pool, name);
+    const auto userHandle = std::make_shared<UserTimer>(timer);
 
     return std::shared_ptr<Timer>(userHandle, timer.get());
 }
 
-TimerPool::Timer::Timer(PoolHandle pool, const std::string& name)
+TimerPool::Timer::Timer(const PoolHandle& pool, const std::string& name)
     : m_pool{ pool }
     , m_name{ name }
     , m_nextExpiry{ Clock::time_point::max() }
@@ -273,7 +274,7 @@ void TimerPool::Timer::start(StartMode mode)
         m_nextExpiry = Clock::now() + m_interval;
     }
 
-    if (auto pool = m_pool.lock())
+    if (const auto& pool = m_pool.lock())
         pool->wake();
 }
 
@@ -286,20 +287,19 @@ void TimerPool::Timer::stop()
         m_nextExpiry = Clock::time_point::max();
     }
 
-    if (auto pool = m_pool.lock())
+    if (const auto& pool = m_pool.lock())
         pool->wake();
 }
 
 void TimerPool::Timer::fire(Clock::time_point now)
 {
+    const auto  selfHandle = shared_from_this();
     int         callbacksRequired = 0;
     Callback    callback;
-    TimerHandle selfHandle;
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        selfHandle = shared_from_this();
         callback   = m_callback;
 
         if (m_repeated)

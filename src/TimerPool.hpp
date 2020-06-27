@@ -106,11 +106,11 @@ public:
     using Callback        = std::function<void(TimerHandle)>;
 
 public:
-    static TimerHandle              Create(PoolHandle pool, const std::string& name = "");
+    static TimerHandle              Create(const PoolHandle& pool, const std::string& name = "");
 
     virtual                         ~Timer() = default;
 
-    WeakPoolHandle                  pool() const { return m_pool; }
+    PoolHandle                      pool() const { return m_pool.lock(); }
 
     std::string                     name() const { return m_name; }
 
@@ -134,7 +134,7 @@ public:
     void                            fire(Clock::time_point now = Clock::time_point::min());
 
 protected:
-    explicit                        Timer(PoolHandle pool, const std::string& name = "");
+    explicit                        Timer(const PoolHandle& pool, const std::string& name = "");
 
                                     Timer(const Timer&) = delete;
     Timer&                          operator=(const Timer&) = delete;
