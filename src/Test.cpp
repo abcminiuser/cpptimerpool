@@ -36,17 +36,20 @@
 #include "TimerPool.hpp"
 
 #include <iostream>
-
+#include <sstream>
 
 int main()
 {
 	static const auto kPrintTimerCallback =
 		[](const TimerPool::TimerHandle& t)
 		{
-			const auto poolName  = t->pool().lock()->name();
+			const auto poolName  = t->pool()->name();
 			const auto timerName = t->name();
 
-			std::cout << poolName << " - " << timerName << "\n";
+			std::stringstream message;
+			message << poolName << " - " << timerName << "\n";
+
+			std::cout << message.str();
 		};
 
 	// TEST 1: Timer pool is long lived, two long lived timers (both should run)
