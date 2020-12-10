@@ -109,28 +109,30 @@ TimerPool::~TimerPool()
 
 void TimerPool::wake()
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
     m_cond.notify_all();
 }
 
 void TimerPool::registerTimer(TimerHandle timer)
 {
-    std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
-    std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
+    {
+        std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
+        std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
-    m_timers.remove(timer);
-    m_timers.emplace_front(timer);
+        m_timers.remove(timer);
+        m_timers.emplace_front(timer);
+    }
 
     m_cond.notify_all();
 }
 
 void TimerPool::unregisterTimer(TimerHandle timer)
 {
-    std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
-    std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
+    {
+        std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
+        std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
-    m_timers.remove(timer);
+        m_timers.remove(timer);
+    }
 
     m_cond.notify_all();
 }
@@ -187,10 +189,12 @@ void TimerPool::run()
 
 void TimerPool::stop()
 {
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    {
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    m_running = false;
-    m_timers.clear();
+        m_running = false;
+        m_timers.clear();
+    }
 
     m_cond.notify_all();
 }
