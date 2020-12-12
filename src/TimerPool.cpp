@@ -50,7 +50,7 @@ namespace
         template<typename... Args>
         explicit EnableConstructor(Args&&... args) : BaseClass(std::forward<Args>(args)...) {}
 
-        virtual ~EnableConstructor() = default;
+        ~EnableConstructor() = default;
     };
 
     // This wrapper classes is the reference-counted object that is shared by
@@ -69,7 +69,7 @@ namespace
                 pool->registerTimer(timer);
         }
 
-        virtual ~UserTimer()
+        ~UserTimer()
         {
             m_timer->stop();
 
@@ -105,11 +105,6 @@ TimerPool::~TimerPool()
 
     if (m_thread.joinable())
         m_thread.join();
-}
-
-void TimerPool::wake()
-{
-    m_cond.notify_all();
 }
 
 void TimerPool::registerTimer(TimerHandle timer)
@@ -196,6 +191,11 @@ void TimerPool::stop()
         m_timers.clear();
     }
 
+    m_cond.notify_all();
+}
+
+void TimerPool::wake()
+{
     m_cond.notify_all();
 }
 

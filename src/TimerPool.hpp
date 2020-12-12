@@ -67,7 +67,6 @@ public:
     bool                            running() const { return m_running; }
 
     void                            stop();
-    void                            wake();
 
     void                            registerTimer(TimerHandle timer);
     void                            unregisterTimer(TimerHandle timer);
@@ -79,6 +78,7 @@ protected:
     TimerPool&                      operator=(const TimerPool&) = delete;
 
     void                            run();
+    void                            wake();
 
 private:
     mutable std::mutex              m_mutex;
