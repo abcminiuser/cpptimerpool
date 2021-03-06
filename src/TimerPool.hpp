@@ -63,8 +63,8 @@ public:
 
     virtual                         ~TimerPool();
 
-    std::string                     name() const    { return m_name; }
-    bool                            running() const { return m_running; }
+    std::string                     name() const noexcept    { return m_name; }
+    bool                            running() const noexcept { return m_running; }
 
     void                            stop();
 
@@ -147,7 +147,6 @@ private:
 
     Clock::time_point               m_nextExpiry;
 
-    bool                            m_running;
     Callback                        m_callback;
     std::chrono::milliseconds       m_interval;
     bool                            m_repeated;

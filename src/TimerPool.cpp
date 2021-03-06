@@ -213,7 +213,6 @@ TimerPool::Timer::Timer(const PoolHandle& pool, const std::string& name)
     : m_pool{ pool }
     , m_name{ name }
     , m_nextExpiry{ Clock::time_point::max() }
-    , m_running{ false }
     , m_callback{ nullptr }
     , m_interval{ 0 }
     , m_repeated{ false }
@@ -252,7 +251,7 @@ void TimerPool::Timer::start(StartMode mode)
             case StartMode::StartOnly:
             {
                 // Abort if timer already running, we aren't allowing restarts
-                if (m_running)
+                if (m_nextExpiry != Clock::time_point::max())
                     return;
 
                 break;
@@ -267,14 +266,13 @@ void TimerPool::Timer::start(StartMode mode)
             case StartMode::RestartOnly:
             {
                 // Abort if timer not already running, we are only allowing restarts
-                if (! m_running)
+                if (m_nextExpiry == Clock::time_point::max())
                     return;
 
                 break;
             }
         }
 
-        m_running = true;
         m_nextExpiry = Clock::now() + m_interval;
     }
 
@@ -287,7 +285,6 @@ void TimerPool::Timer::stop()
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        m_running = false;
         m_nextExpiry = Clock::time_point::max();
     }
 
@@ -297,14 +294,14 @@ void TimerPool::Timer::stop()
 
 void TimerPool::Timer::fire(Clock::time_point now)
 {
-    const auto  selfHandle = shared_from_this();
-    int         callbacksRequired = 0;
-    Callback    callback;
+    const auto   selfHandle = shared_from_this();
+    unsigned int callbacksRequired = 0;
+    Callback     callback;
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        callback   = m_callback;
+        callback = m_callback;
 
         if (m_repeated)
         {
@@ -321,7 +318,6 @@ void TimerPool::Timer::fire(Clock::time_point now)
         else
         {
             m_nextExpiry = Clock::time_point::max();
-            m_running = false;
 
             callbacksRequired++;
         }
@@ -338,20 +334,12 @@ bool TimerPool::Timer::running() const noexcept
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    // We can't use a std::atomic<bool> here, since we need to be sure that
-    // the run state returned is under the same lock as the rest of the timer
-    // management to ensure it remains consistent with the expiry time and other
-    // internal state.
-
-    return m_running;
+    return m_nextExpiry != Clock::time_point::max();
 }
 
 TimerPool::Timer::Clock::time_point TimerPool::Timer::nextExpiry() const noexcept
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-    if (! m_running)
-        return Clock::time_point::max();
 
     return m_nextExpiry;
 }
