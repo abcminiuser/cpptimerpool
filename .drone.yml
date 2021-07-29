@@ -8,7 +8,9 @@ steps:
   - export CC=/usr/bin/clang
   - export CXX=/usr/bin/clang++
   - $CC --version
-  - make -C src all
+  - cmake -B build/clang -DCMAKE_CXX_COMPILER="$CXX" -G "Ninja" .
+  - cmake --build build/clang
+  - valgrind ./build/clang/src/CPPTimerPool
 
 - name: Build (GCC)
   image: abcminiuser/docker-ci-ubuntu-buildtools
@@ -16,19 +18,6 @@ steps:
   - export CC=/usr/bin/gcc
   - export CXX=/usr/bin/g++
   - $CC --version
-  - make -C src all
-
-- name: Test
-  image: abcminiuser/docker-ci-ubuntu-buildtools
-  commands:
-  - make -C src test
-
-- name: Static Analysis
-  image: abcminiuser/docker-ci-ubuntu-buildtools
-  commands:
-  - make -C src cppcheck
-
-- name: Valgrind
-  image: abcminiuser/docker-ci-ubuntu-buildtools
-  commands:
-  - make -C src valgrind
+  - cmake -B build/gcc -DCMAKE_CXX_COMPILER="$CXX" -G "Ninja" .
+  - cmake --build build/gcc
+  - valgrind ./build/gcc/src/CPPTimerPool

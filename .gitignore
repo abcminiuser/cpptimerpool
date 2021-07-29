@@ -1,5 +1,4 @@
-.vs
-Debug/
-Release/
-*.vcxproj.filters
-*.vcxproj.user
+.vs/
+CMakeSettings.json
+out/
+build/
