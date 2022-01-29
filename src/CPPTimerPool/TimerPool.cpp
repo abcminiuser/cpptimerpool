@@ -1,6 +1,6 @@
 /*
        Thread Safe Timer Pool Library
-           By Dean Camera, 2019.
+           By Dean Camera, 2022.
 
      dean [at] fourwalledcubicle [dot] com
           www.fourwalledcubicle.com
@@ -110,7 +110,6 @@ TimerPool::~TimerPool()
 void TimerPool::registerTimer(TimerHandle timer)
 {
     {
-        std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
         std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
         m_timers.remove(timer);
@@ -123,7 +122,6 @@ void TimerPool::registerTimer(TimerHandle timer)
 void TimerPool::unregisterTimer(TimerHandle timer)
 {
     {
-        std::lock_guard<decltype(m_timerMutex)> timerLock(m_timerMutex);
         std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
 
         m_timers.remove(timer);
@@ -138,7 +136,6 @@ void TimerPool::run()
 
     while (m_running)
     {
-        std::unique_lock<decltype(m_timerMutex)> timerLock(m_timerMutex);
         std::unique_lock<decltype(m_mutex)>      lock(m_mutex);
 
         const auto nowTime = Clock::now();
@@ -172,10 +169,7 @@ void TimerPool::run()
         }
         else
         {
-            // About to enter idle state, release the timer (de-)registration lock so that other threads can (de-)register
-            // any timers while the pool is sleeping, when no callbacks are in progress.
-
-            timerLock.unlock();
+            // No timers have expired yet, we can sleep.
 
             m_cond.wait_until(lock, wakeTime);
         }

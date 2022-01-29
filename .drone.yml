@@ -10,7 +10,7 @@ steps:
   - $CC --version
   - cmake -B build/clang -DCMAKE_CXX_COMPILER="$CXX" -G "Ninja" .
   - cmake --build build/clang
-  - valgrind ./build/clang/src/CPPTimerPool
+  - valgrind ./build/clang/src/TestApp
 
 - name: Build (GCC)
   image: abcminiuser/docker-ci-ubuntu-buildtools
@@ -20,4 +20,4 @@ steps:
   - $CC --version
   - cmake -B build/gcc -DCMAKE_CXX_COMPILER="$CXX" -G "Ninja" .
   - cmake --build build/gcc
-  - valgrind ./build/gcc/src/CPPTimerPool
+  - valgrind ./build/gcc/src/TestApp

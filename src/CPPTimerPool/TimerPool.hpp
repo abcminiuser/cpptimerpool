@@ -1,6 +1,6 @@
 /*
        Thread Safe Timer Pool Library
-           By Dean Camera, 2019.
+           By Dean Camera, 2022.
 
      dean [at] fourwalledcubicle [dot] com
           www.fourwalledcubicle.com
@@ -85,7 +85,6 @@ private:
 
     const std::string               m_name;
 
-    std::mutex						m_timerMutex;
     std::forward_list<TimerHandle>  m_timers;
 
     std::atomic<bool>               m_running;
