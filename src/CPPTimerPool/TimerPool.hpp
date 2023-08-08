@@ -71,6 +71,8 @@ public:
     void                            registerTimer(TimerHandle timer);
     void                            unregisterTimer(TimerHandle timer);
 
+    std::thread::native_handle_type get_running_thread();
+
 protected:
     explicit                        TimerPool(const std::string& name);
 

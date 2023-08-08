@@ -130,6 +130,10 @@ void TimerPool::unregisterTimer(TimerHandle timer)
     m_cond.notify_all();
 }
 
+std::thread::native_handle_type TimerPool::get_running_thread(){
+    return m_thread.native_handle();
+}
+
 void TimerPool::run()
 {
     std::vector<TimerHandle> expiredTimers;
