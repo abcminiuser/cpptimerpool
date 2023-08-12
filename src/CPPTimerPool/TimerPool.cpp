@@ -51,7 +51,7 @@ namespace
     // internally to the factory methods inside the TimerPool class.
     template <class BaseClass>
     class EnableConstructor final
-		: public BaseClass
+        : public BaseClass
     {
     public:
         template<typename... Args>
@@ -112,18 +112,7 @@ TimerPool::TimerPool(const std::string& name)
     , m_timers{ }
     , m_running{ true }
     , m_cond{ }
-    , m_thread{
-        [this]()
-        {
-            std::string threadName = "Timer Pool";
-            if (!m_name.empty())
-                threadName += " '" + m_name + "'";
-
-            NameCurrentThread(threadName);
-
-            run();
-        }
-    }
+    , m_thread{ [this]() { run(); } }
 {
 
 }
@@ -139,7 +128,7 @@ TimerPool::~TimerPool()
 void TimerPool::registerTimer(TimerHandle timer)
 {
     {
-        std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
         m_timers.remove(timer);
         m_timers.emplace_front(timer);
@@ -151,7 +140,7 @@ void TimerPool::registerTimer(TimerHandle timer)
 void TimerPool::unregisterTimer(TimerHandle timer)
 {
     {
-        std::lock_guard<decltype(m_mutex)>      lock(m_mutex);
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
         m_timers.remove(timer);
     }
@@ -161,11 +150,20 @@ void TimerPool::unregisterTimer(TimerHandle timer)
 
 void TimerPool::run()
 {
+    // Name the current timer pool thread, useful when using a debugger.
+    {
+        std::string threadName = "Timer Pool";
+        if (! m_name.empty())
+            threadName += " '" + m_name + "'";
+
+        NameCurrentThread(threadName);
+    }
+
     std::vector<TimerHandle> expiredTimers;
 
     while (m_running)
     {
-        std::unique_lock<decltype(m_mutex)>      lock(m_mutex);
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
         const auto nowTime = Clock::now();
 

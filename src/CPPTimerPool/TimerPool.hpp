@@ -77,6 +77,7 @@ protected:
                                     TimerPool(const TimerPool&) = delete;
     TimerPool&                      operator=(const TimerPool&) = delete;
 
+private:
     void                            run();
     void                            wake();
 
