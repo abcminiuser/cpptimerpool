@@ -113,7 +113,7 @@ public:
 
     std::string                     name() const noexcept { return m_name; }
 
-    void                            setCallback(Callback&& callback);
+    void                            setCallback(Callback callback);
     void                            setInterval(std::chrono::milliseconds ms);
     void                            setRepeated(bool repeated);
 

@@ -243,11 +243,11 @@ TimerPool::Timer::Timer(const PoolHandle& pool, const std::string& name)
 
 }
 
-void TimerPool::Timer::setCallback(Callback&& callback)
+void TimerPool::Timer::setCallback(Callback callback)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    m_callback = callback;
+    m_callback = std::move(callback);
 }
 
 void TimerPool::Timer::setInterval(std::chrono::milliseconds ms)
