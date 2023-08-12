@@ -37,6 +37,13 @@
 
 #include <vector>
 
+#if defined(_WIN32)
+    #define NOMINMAX
+    #define WIN32_LEAN_AND_MEAN
+    #include <Windows.h>
+#elif defined(__linux__) || defined(__APPLE__)
+    #include <pthread.h>
+#endif
 
 namespace
 {
@@ -80,6 +87,17 @@ namespace
     private:
         const TimerPool::TimerHandle m_timer;
     };
+
+    void NameCurrentThread(const std::string& name)
+    {
+#if defined(_WIN32)
+        SetThreadDescription(GetCurrentThread(), std::wstring(name.begin(), name.end()).c_str());
+#elif defined(__linux__)
+        pthread_setname_np(pthread_self(), name.c_str());
+#elif defined(__APPLE__)
+        pthread_setname_np(name.c_str());
+#endif
+    }
 }
 
 
@@ -94,7 +112,18 @@ TimerPool::TimerPool(const std::string& name)
     , m_timers{ }
     , m_running{ true }
     , m_cond{ }
-    , m_thread{ [this]() { run(); } }
+    , m_thread{
+        [this]()
+        {
+            std::string threadName = "Timer Pool";
+            if (!m_name.empty())
+                threadName += " '" + m_name + "'";
+
+            NameCurrentThread(threadName);
+
+            run();
+        }
+    }
 {
 
 }

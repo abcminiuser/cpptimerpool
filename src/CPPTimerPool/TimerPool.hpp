@@ -59,7 +59,7 @@ public:
     using TimerHandle     = std::shared_ptr<Timer>;
 
 public:
-    static PoolHandle               Create(const std::string& name = "");
+    static PoolHandle               Create(const std::string& name = {});
 
     virtual                         ~TimerPool();
 
@@ -105,13 +105,13 @@ public:
     using Callback        = std::function<void(TimerHandle)>;
 
 public:
-    static TimerHandle              Create(const PoolHandle& pool, const std::string& name = "");
+    static TimerHandle              Create(const PoolHandle& pool, const std::string& name = {});
 
     virtual                         ~Timer() = default;
 
-    PoolHandle                      pool() const { return m_pool.lock(); }
+    PoolHandle                      pool() const          { return m_pool.lock(); }
 
-    std::string                     name() const { return m_name; }
+    std::string                     name() const noexcept { return m_name; }
 
     void                            setCallback(Callback&& callback);
     void                            setInterval(std::chrono::milliseconds ms);
@@ -133,7 +133,7 @@ public:
     void                            fire(Clock::time_point now = Clock::time_point::min());
 
 protected:
-    explicit                        Timer(const PoolHandle& pool, const std::string& name = "");
+    explicit                        Timer(const PoolHandle& pool, const std::string& name = {});
 
                                     Timer(const Timer&) = delete;
     Timer&                          operator=(const Timer&) = delete;
