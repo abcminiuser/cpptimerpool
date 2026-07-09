@@ -47,19 +47,6 @@
 
 namespace
 {
-    // Private wrapper, used to expose the normally protected constructors
-    // internally to the factory methods inside the TimerPool class.
-    template <class BaseClass>
-    class EnableConstructor final
-        : public BaseClass
-    {
-    public:
-        template<typename... Args>
-        explicit EnableConstructor(Args&&... args) : BaseClass(std::forward<Args>(args)...) {}
-
-        ~EnableConstructor() = default;
-    };
-
     // This wrapper classes is the reference-counted object that is shared by
     // all created user-timers. It is ref-counted independently to the actual
     // timer instance, so that the timer is automatically registered and
@@ -103,10 +90,10 @@ namespace
 
 TimerPool::PoolHandle TimerPool::Create(const std::string& name)
 {
-    return std::make_shared<EnableConstructor<TimerPool>>(name);
+    return std::make_shared<TimerPool>(PrivateConstructOnlyTag{}, name);
 }
 
-TimerPool::TimerPool(const std::string& name)
+TimerPool::TimerPool(const PrivateConstructOnlyTag&, const std::string& name)
     : m_mutex{ }
     , m_name{ name }
     , m_timers{ }
@@ -224,13 +211,13 @@ void TimerPool::wake()
 
 TimerPool::Timer::TimerHandle TimerPool::Timer::Create(const PoolHandle& pool, const std::string& name)
 {
-    const auto timer      = std::make_shared<EnableConstructor<Timer>>(pool, name);
+    const auto timer = std::make_shared<Timer>(PrivateConstructOnlyTag{}, pool, name);
     const auto userHandle = std::make_shared<UserTimer>(timer);
 
     return std::shared_ptr<Timer>(userHandle, timer.get());
 }
 
-TimerPool::Timer::Timer(const PoolHandle& pool, const std::string& name)
+TimerPool::Timer::Timer(const PrivateConstructOnlyTag&, const PoolHandle& pool, const std::string& name)
     : m_pool{ pool }
     , m_name{ name }
     , m_nextExpiry{ Clock::time_point::max() }

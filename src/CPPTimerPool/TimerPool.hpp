@@ -46,9 +46,12 @@
 #include <thread>
 
 
-class TimerPool
+class TimerPool final
     : public std::enable_shared_from_this<TimerPool>
 {
+private:
+    struct PrivateConstructOnlyTag{};
+
 public:
     class Timer;
 
@@ -61,7 +64,11 @@ public:
 public:
     static PoolHandle               Create(const std::string& name = {});
 
+    explicit                        TimerPool(const PrivateConstructOnlyTag&, const std::string& name);
     virtual                         ~TimerPool();
+
+    TimerPool(const TimerPool&) = delete;
+    TimerPool& operator=(const TimerPool&) = delete;
 
     std::string                     name() const noexcept    { return m_name; }
     bool                            running() const noexcept { return m_running; }
@@ -70,12 +77,6 @@ public:
 
     void                            registerTimer(TimerHandle timer);
     void                            unregisterTimer(TimerHandle timer);
-
-protected:
-    explicit                        TimerPool(const std::string& name);
-
-                                    TimerPool(const TimerPool&) = delete;
-    TimerPool&                      operator=(const TimerPool&) = delete;
 
 private:
     void                            run();
@@ -94,9 +95,12 @@ private:
     std::thread                     m_thread;
 };
 
-class TimerPool::Timer
+class TimerPool::Timer final
     : public std::enable_shared_from_this<Timer>
 {
+private:
+    struct PrivateConstructOnlyTag {};
+
 public:
     using Clock           = TimerPool::Clock;
     using WeakPoolHandle  = TimerPool::WeakPoolHandle;
@@ -108,7 +112,11 @@ public:
 public:
     static TimerHandle              Create(const PoolHandle& pool, const std::string& name = {});
 
+    explicit                        Timer(const PrivateConstructOnlyTag&, const PoolHandle& pool, const std::string& name = {});
     virtual                         ~Timer() = default;
+
+    Timer(const Timer&) = delete;
+    Timer& operator=(const Timer&) = delete;
 
     PoolHandle                      pool() const          { return m_pool.lock(); }
 
@@ -132,12 +140,6 @@ public:
     Clock::time_point               nextExpiry() const noexcept;
 
     void                            fire(Clock::time_point now = Clock::time_point::min());
-
-protected:
-    explicit                        Timer(const PoolHandle& pool, const std::string& name = {});
-
-                                    Timer(const Timer&) = delete;
-    Timer&                          operator=(const Timer&) = delete;
 
 private:
     mutable std::mutex              m_mutex;
