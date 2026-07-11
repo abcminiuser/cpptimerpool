@@ -65,7 +65,7 @@ public:
     static PoolHandle               Create(const std::string& name = {});
 
     explicit                        TimerPool(const PrivateConstructOnlyTag&, const std::string& name);
-    virtual                         ~TimerPool();
+                                    ~TimerPool();
 
     TimerPool(const TimerPool&) = delete;
     TimerPool& operator=(const TimerPool&) = delete;
@@ -113,7 +113,7 @@ public:
     static TimerHandle              Create(const PoolHandle& pool, const std::string& name = {});
 
     explicit                        Timer(const PrivateConstructOnlyTag&, const PoolHandle& pool, const std::string& name = {});
-    virtual                         ~Timer() = default;
+                                    ~Timer() = default;
 
     Timer(const Timer&) = delete;
     Timer& operator=(const Timer&) = delete;
